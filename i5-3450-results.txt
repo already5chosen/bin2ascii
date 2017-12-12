@@ -1,0 +1,5 @@
+55.64 clocks. Terje's
+44.26 clocks. Terje's -O3
+78.71 clocks. Half-naive base 10.
+61.88 clocks. Half-naive base 100.
+51.87 clocks. Half-naive base 1000.
