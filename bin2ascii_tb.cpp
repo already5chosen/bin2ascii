@@ -12,6 +12,7 @@ char *uint64_to_ascii(uint64_t n, char *buf);
 char *uint64_to_ascii_o3(uint64_t n, char *buf);
 void uint64_to_ascii_hn_base10(uint64_t val, char* dst);
 void uint64_to_ascii_hn_base100(uint64_t val, char* dst);
+void uint64_to_ascii_tn_base100(uint64_t val, char* dst);
 void uint64_to_ascii_hn_base1000(uint64_t val, char* dst);
 void uint64_to_ascii_hn_base1000_init(void);
 void uint64_to_ascii_hn_base1000_le(uint64_t val, char* dst);
@@ -145,6 +146,26 @@ int main(int argz, char** argv)
   }
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
   printf("%.2f clocks. Half-naive base 1000.\n", double(dtv[NITER/2])/TST_SZ);
+
+  for (int it = 0; it < NITER; ++it) {
+    memset(pout, '*', TST_SZ*21);
+    uint64_t t0 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_tn_base100(inpv[i], &outv[i*21]);
+    }
+    uint64_t t1 = __rdtsc();
+    dtv[it] = t1 - t0;
+    for (int i = 0; i < TST_SZ*21; ++i)
+      dummy += outv[i];
+    if (it==0) {
+      if (memcmp(pout, pref, TST_SZ*21) != 0) {
+        printf("uint64_to_ascii_tn_base100 fail.\n");
+        return 1;
+      }
+    }
+  }
+  std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
+  printf("%.2f clocks. Third-naive base 100.\n", double(dtv[NITER/2])/TST_SZ);
 
   for (int it = 0; it < NITER; ++it) {
     memset(pout, '*', TST_SZ*21);
