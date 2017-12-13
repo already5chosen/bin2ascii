@@ -13,10 +13,11 @@ char *uint64_to_ascii_o3(uint64_t n, char *buf);
 void uint64_to_ascii_hn_base10(uint64_t val, char* dst);
 void uint64_to_ascii_hn_base100(uint64_t val, char* dst);
 void uint64_to_ascii_tn_base100(uint64_t val, char* dst);
+void uint64_to_ascii_hnts_base10(uint64_t val, char* dst);
+void uint64_to_ascii_hnts_base100(uint64_t val, char* dst);
+void uint64_to_ascii_tnts_base100(uint64_t val, char* dst);
 void uint64_to_ascii_hn_base1000(uint64_t val, char* dst);
 void uint64_to_ascii_hn_base1000_init(void);
-void uint64_to_ascii_hn_base1000_le(uint64_t val, char* dst);
-void uint64_to_ascii_hn_base1000_le_init(void);
 size_t __attribute__ ((noinline)) print_buf64(char *buffer, uint64_t value);
 }
 
@@ -29,8 +30,11 @@ int main(int argz, char** argv)
   std::uniform_int_distribution<uint64_t> rndDistr(0, uint64_t(-1));
 
   std::vector<uint64_t> inpv(TST_SZ);
+  inpv[0] = 0;
+  inpv[1] = uint64_t(-1);
+  inpv[2] = 17999999999999999999ull;
   auto rndFunc = std::bind ( rndDistr, std::ref(rndGen) );
-  for (int i = 0; i < TST_SZ; ++i)
+  for (int i = 3; i < TST_SZ; ++i)
     inpv[i] = rndFunc();
 
   std::vector<char> refv(TST_SZ*21);
@@ -110,6 +114,26 @@ int main(int argz, char** argv)
     memset(pout, '*', TST_SZ*21);
     uint64_t t0 = __rdtsc();
     for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_hnts_base10(inpv[i], &outv[i*21]);
+    }
+    uint64_t t1 = __rdtsc();
+    dtv[it] = t1 - t0;
+    for (int i = 0; i < TST_SZ*21; ++i)
+      dummy += outv[i];
+    if (it==0) {
+      if (memcmp(pout, pref, TST_SZ*21) != 0) {
+        printf("uint64_to_ascii_hnts_base10 fail.\n");
+        return 1;
+      }
+    }
+  }
+  std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
+  printf("%.2f clocks. Half-naive base 10. Compiler fed by tea spoon.\n", double(dtv[NITER/2])/TST_SZ);
+
+  for (int it = 0; it < NITER; ++it) {
+    memset(pout, '*', TST_SZ*21);
+    uint64_t t0 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
       uint64_to_ascii_hn_base100(inpv[i], &outv[i*21]);
     }
     uint64_t t1 = __rdtsc();
@@ -125,6 +149,26 @@ int main(int argz, char** argv)
   }
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
   printf("%.2f clocks. Half-naive base 100.\n", double(dtv[NITER/2])/TST_SZ);
+
+  for (int it = 0; it < NITER; ++it) {
+    memset(pout, '*', TST_SZ*21);
+    uint64_t t0 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_hnts_base100(inpv[i], &outv[i*21]);
+    }
+    uint64_t t1 = __rdtsc();
+    dtv[it] = t1 - t0;
+    for (int i = 0; i < TST_SZ*21; ++i)
+      dummy += outv[i];
+    if (it==0) {
+      if (memcmp(pout, pref, TST_SZ*21) != 0) {
+        printf("uint64_to_ascii_hnts_base100 fail.\n");
+        return 1;
+      }
+    }
+  }
+  std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
+  printf("%.2f clocks. Half-naive base 100. Compiler fed by tea spoon.\n", double(dtv[NITER/2])/TST_SZ);
 
   uint64_to_ascii_hn_base1000_init();
   for (int it = 0; it < NITER; ++it) {
@@ -166,6 +210,26 @@ int main(int argz, char** argv)
   }
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
   printf("%.2f clocks. Third-naive base 100.\n", double(dtv[NITER/2])/TST_SZ);
+
+  for (int it = 0; it < NITER; ++it) {
+    memset(pout, '*', TST_SZ*21);
+    uint64_t t0 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_tnts_base100(inpv[i], &outv[i*21]);
+    }
+    uint64_t t1 = __rdtsc();
+    dtv[it] = t1 - t0;
+    for (int i = 0; i < TST_SZ*21; ++i)
+      dummy += outv[i];
+    if (it==0) {
+      if (memcmp(pout, pref, TST_SZ*21) != 0) {
+        printf("uint64_to_ascii_tnts_base100 fail.\n");
+        return 1;
+      }
+    }
+  }
+  std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
+  printf("%.2f clocks. Third-naive base 100. Compiler fed by tea spoon.\n", double(dtv[NITER/2])/TST_SZ);
 
   for (int it = 0; it < NITER; ++it) {
     memset(pout, '*', TST_SZ*21);

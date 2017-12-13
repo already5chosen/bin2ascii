@@ -21,7 +21,13 @@ bin2ascii_t_o3.o: bin2ascii_t.c
 bin2ascii_halfnaive_base10.o: bin2ascii_halfnaive_base10.c
 	${CC} -c $<
 
+bin2ascii_halfnaive_base10_ts.o: bin2ascii_halfnaive_base10_ts.c
+	${CC} -c $<
+
 bin2ascii_halfnaive_base100.o: bin2ascii_halfnaive_base100.c
+	${CC} -c $<
+
+bin2ascii_halfnaive_base100_ts.o: bin2ascii_halfnaive_base100_ts.c
 	${CC} -c $<
 
 bin2ascii_halfnaive_base1000.o: bin2ascii_halfnaive_base1000.c
@@ -30,15 +36,21 @@ bin2ascii_halfnaive_base1000.o: bin2ascii_halfnaive_base1000.c
 bin2ascii_thirdnaive_base100.o: bin2ascii_thirdnaive_base100.c
 	${CC} -c $<
 
+bin2ascii_thirdnaive_base100_ts.o: bin2ascii_thirdnaive_base100_ts.c
+	${CC} -c $<
+
 OBJECTS :=
 OBJECTS += bin2ascii_tb.o
 OBJECTS += bin2ascii_t.o
 OBJECTS += bin2ascii_t_o3.o
 OBJECTS += bin2ascii_j.o
 OBJECTS += bin2ascii_halfnaive_base10.o
+OBJECTS += bin2ascii_halfnaive_base10_ts.o
 OBJECTS += bin2ascii_halfnaive_base100.o
+OBJECTS += bin2ascii_halfnaive_base100_ts.o
 OBJECTS += bin2ascii_halfnaive_base1000.o
 OBJECTS += bin2ascii_thirdnaive_base100.o
+OBJECTS += bin2ascii_thirdnaive_base100_ts.o
 
 bin2ascii_tb.exe: ${OBJECTS}
 	${CPP} $+ -o $@
