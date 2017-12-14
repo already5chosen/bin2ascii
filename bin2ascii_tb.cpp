@@ -20,6 +20,7 @@ void uint64_to_ascii_hn_base1000(uint64_t val, char* dst);
 void uint64_to_ascii_hn_base1000_init(void);
 size_t __attribute__ ((noinline)) print_buf64(char *buffer, uint64_t value);
 void uint64_to_ascii_ta_base100(uint64_t val, char* dst);
+void uint64_to_ascii_ta7_32_base100(uint64_t val, char* dst);
 void uint64_to_ascii_ta3_base100(uint64_t val, char* dst);
 }
 
@@ -277,6 +278,26 @@ int main(int argz, char** argv)
   }
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
   printf("%.2f clocks. Terje-alike (2 chains) base 100.\n", double(dtv[NITER/2])/TST_SZ);
+
+  for (int it = 0; it < NITER; ++it) {
+    memset(pout, '*', TST_SZ*21);
+    uint64_t t0 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_ta7_32_base100(inpv[i], &outv[i*21]);
+    }
+    uint64_t t1 = __rdtsc();
+    dtv[it] = t1 - t0;
+    for (int i = 0; i < TST_SZ*21; ++i)
+      dummy += outv[i];
+    if (it==0) {
+      if (memcmp(pout, pref, TST_SZ*21) != 0) {
+        printf("uint64_to_ascii_ta7_32_base100 fail.\n");
+        return print_error(pout, pref, TST_SZ);
+      }
+    }
+  }
+  std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
+  printf("%.2f clocks. Terje-alike (2 chains) base 100. Fix point format 7.32 for a benefit of stupid compilers.\n", double(dtv[NITER/2])/TST_SZ);
 
   for (int it = 0; it < NITER; ++it) {
     memset(pout, '*', TST_SZ*21);

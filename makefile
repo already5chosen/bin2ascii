@@ -42,6 +42,9 @@ bin2ascii_thirdnaive_base100_ts.o: bin2ascii_thirdnaive_base100_ts.c
 bin2ascii_terjealike_base100.o : bin2ascii_terjealike_base100.c
 	${CC} -c $<
 
+bin2ascii_terjealike_base100_7_32.o : bin2ascii_terjealike_base100_7_32.c
+	${CC} -c $<
+
 bin2ascii_terjealike3_base100.o : bin2ascii_terjealike3_base100.c
 	${CC} -c $<
 
@@ -58,6 +61,7 @@ OBJECTS += bin2ascii_halfnaive_base1000.o
 OBJECTS += bin2ascii_thirdnaive_base100.o
 OBJECTS += bin2ascii_thirdnaive_base100_ts.o
 OBJECTS += bin2ascii_terjealike_base100.o
+OBJECTS += bin2ascii_terjealike_base100_7_32.o
 OBJECTS += bin2ascii_terjealike3_base100.o
 
 bin2ascii_tb.exe: ${OBJECTS}
