@@ -116,35 +116,37 @@ static const char b100_tab[200] = {
 void uint64_to_ascii_ta_base100(uint64_t val, char* dst)
 {
   const int64_t POW10_10 = ((int64_t)10)*1000*1000*1000;
-  const int64_t POW2_57_DIV_POW100_4 = ((int64_t)(1) << 57)/100/100/100/100 + 1;
-  const int64_t MASK55 = ((int64_t)(1) << 55) - 1;
+  const uint64_t POW2_57_DIV_POW100_4 = ((int64_t)(1) << 57)/100/100/100/100 + 1;
+  const uint64_t MASK57 = ((int64_t)(1) << 57) - 1;
   int64_t hix = val / POW10_10; // digits[0..9]
   int64_t lox = val % POW10_10; // digits[10..19]
 
-  // Strip two LS bits of each half. They will be added back at last step.
-  // Removal of LS bits bring values under 2**32, which allow to calculate
-  // a sufficiently precise 7.55 representation without using 64x64=>128 multiplication.
-  // Not that there is something wrong with 64x64=>128. It works great both
+  // Strip LS bit of low half. It will be added back at last step.
+  // Removal of LS bit reduces the need for precision in DIV factor, which allow to calculate
+  // a sufficiently precise 7.57 representation without using 64x64=>128 multiplication.
+  // Not that there is something wrong with 64x64=>128. It works great
   // on both targets architectures that matter, but it's impossible to express in standard 'C'.
-  // And separation of LS bits likely not much slower...
-  int64_t hi = (hix >> 2)*POW2_57_DIV_POW100_4; // fox-point 7.55 format. 2 MS bits unused
-  int64_t lo = (lox >> 2)*POW2_57_DIV_POW100_4;
+  // And separation of LS bit likely not much slower...
+  int64_t lor = lox & (uint64_t)(-2);
+  uint64_t hi = hix*POW2_57_DIV_POW100_4; // fix-point 7.57 format.
+  uint64_t lo = lor*POW2_57_DIV_POW100_4;
 
-  memcpy(dst+0*10+0, &b100_tab[(hi >> 55)*2], 2); hi = (hi & MASK55) * 100;
-  memcpy(dst+1*10+0, &b100_tab[(lo >> 55)*2], 2); lo = (lo & MASK55) * 100;
+  memcpy(dst+0*10+0, &b100_tab[(hi >> 57)*2], 2); hi = (hi & MASK57) * 100;
+  memcpy(dst+1*10+0, &b100_tab[(lo >> 57)*2], 2); lo = (lo & MASK57) * 100;
 
-  memcpy(dst+0*10+2, &b100_tab[(hi >> 55)*2], 2); hi = (hi & MASK55) * 100;
-  memcpy(dst+1*10+2, &b100_tab[(lo >> 55)*2], 2); lo = (lo & MASK55) * 100;
+  memcpy(dst+0*10+2, &b100_tab[(hi >> 57)*2], 2); hi = (hi & MASK57) * 100;
+  memcpy(dst+1*10+2, &b100_tab[(lo >> 57)*2], 2); lo = (lo & MASK57) * 100;
 
-  memcpy(dst+0*10+4, &b100_tab[(hi >> 55)*2], 2); hi = (hi & MASK55) * 100;
-  memcpy(dst+1*10+4, &b100_tab[(lo >> 55)*2], 2); lo = (lo & MASK55) * 100;
+  memcpy(dst+0*10+4, &b100_tab[(hi >> 57)*2], 2); hi = (hi & MASK57) * 100;
+  memcpy(dst+1*10+4, &b100_tab[(lo >> 57)*2], 2); lo = (lo & MASK57) * 100;
 
-  memcpy(dst+0*10+6, &b100_tab[(hi >> 55)*2], 2); hi = (hi & MASK55) * 100;
-  memcpy(dst+1*10+6, &b100_tab[(lo >> 55)*2], 2); lo = (lo & MASK55) * 100;
+  memcpy(dst+0*10+6, &b100_tab[(hi >> 57)*2], 2); hi = (hi & MASK57) * 100;
+  memcpy(dst+1*10+6, &b100_tab[(lo >> 57)*2], 2); lo = (lo & MASK57) * 100;
 
-  // restore LS bits
-  hi = ((hi >> 55) & (-4)) | (hix & 3);
-  lo = ((lo >> 55) & (-4)) | (lox & 3);
+  hi >>= 57;
+  lo >>= 57;
+  // restore LS bit of lo
+  lo = (lo & (-2)) | (lox & 1);
 
   memcpy(dst+0*10+8, &b100_tab[hi*2], 2);
   memcpy(dst+1*10+8, &b100_tab[lo*2], 2);

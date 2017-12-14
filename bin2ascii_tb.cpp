@@ -36,8 +36,11 @@ int main(int argz, char** argv)
   inpv[0] = 0;
   inpv[1] = uint64_t(-1);
   inpv[2] = 17999999999999999999ull;
+  inpv[3] = 9999999999ull;
+  inpv[4] = 19999999999ull;
+  inpv[5] = 1;
   auto rndFunc = std::bind ( rndDistr, std::ref(rndGen) );
-  for (int i = 3; i < TST_SZ; ++i)
+  for (int i = 6; i < TST_SZ; ++i)
     inpv[i] = rndFunc();
 
   std::vector<char> refv(TST_SZ*21);
