@@ -8,6 +8,7 @@
 #include <x86intrin.h>
 
 extern "C" {
+uint64_t zero(void);
 char *uint64_to_ascii(uint64_t n, char *buf);
 char *uint64_to_ascii_o3(uint64_t n, char *buf);
 void uint64_to_ascii_hn_base10(uint64_t val, char* dst);
@@ -55,8 +56,10 @@ int main(int argz, char** argv)
 
   std::vector<char> outv(TST_SZ*21);
   char* pout = &outv.at(0);
-  uint64_t dtv[NITER];
+  uint64_t dtv[NITER], dtvl[NITER];
   unsigned dummy = 0;
+
+  uint64_t aZero = zero(); // we know it's zero, but compiler and CPU don't know
 
   for (int it = 0; it < NITER; ++it) {
     memset(pout, '*', TST_SZ*21);
@@ -74,9 +77,24 @@ int main(int argz, char** argv)
         return 1;
       }
     }
+    char latbuf[32]={0};
+    uint64_t xx = 0;
+    uint64_t t2 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii(inpv[i] ^ xx, latbuf);
+      uint64_t x0, x1;
+      memcpy(&x0, &latbuf[0],  sizeof(uint64_t));
+      memcpy(&x1, &latbuf[16], sizeof(uint64_t));
+      xx = x0 & x1 & aZero;
+    }
+    uint64_t t3 = __rdtsc();
+    dtvl[it] = t3 - t2;
+    for (int i = 0; i < 21; ++i)
+      dummy += latbuf[i];
   }
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
-  printf("%.2f clocks. Terje's\n", double(dtv[NITER/2])/TST_SZ);
+  std::nth_element(&dtvl[0], &dtvl[NITER/2], &dtvl[NITER]);
+  printf("%.2f/%.2f clocks. Terje's\n", double(dtv[NITER/2])/TST_SZ, double(dtvl[NITER/2])/TST_SZ);
 
   for (int it = 0; it < NITER; ++it) {
     memset(pout, '*', TST_SZ*21);
@@ -94,9 +112,24 @@ int main(int argz, char** argv)
         return 1;
       }
     }
+    char latbuf[32]={0};
+    uint64_t xx = 0;
+    uint64_t t2 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_o3(inpv[i] ^ xx, latbuf);
+      uint64_t x0, x1;
+      memcpy(&x0, &latbuf[0],  sizeof(uint64_t));
+      memcpy(&x1, &latbuf[16], sizeof(uint64_t));
+      xx = x0 & x1 & aZero;
+    }
+    uint64_t t3 = __rdtsc();
+    dtvl[it] = t3 - t2;
+    for (int i = 0; i < 21; ++i)
+      dummy += latbuf[i];
   }
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
-  printf("%.2f clocks. Terje's -O3\n", double(dtv[NITER/2])/TST_SZ);
+  std::nth_element(&dtvl[0], &dtvl[NITER/2], &dtvl[NITER]);
+  printf("%.2f/%.2f clocks. Terje's -O3\n", double(dtv[NITER/2])/TST_SZ, double(dtvl[NITER/2])/TST_SZ);
 
   for (int it = 0; it < NITER; ++it) {
     memset(pout, '*', TST_SZ*21);
@@ -114,9 +147,24 @@ int main(int argz, char** argv)
         return 1;
       }
     }
+    char latbuf[32]={0};
+    uint64_t xx = 0;
+    uint64_t t2 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_hn_base10(inpv[i] ^ xx, latbuf);
+      uint64_t x0, x1;
+      memcpy(&x0, &latbuf[0],  sizeof(uint64_t));
+      memcpy(&x1, &latbuf[16], sizeof(uint64_t));
+      xx = x0 & x1 & aZero;
+    }
+    uint64_t t3 = __rdtsc();
+    dtvl[it] = t3 - t2;
+    for (int i = 0; i < 21; ++i)
+      dummy += latbuf[i];
   }
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
-  printf("%.2f clocks. Half-naive base 10.\n", double(dtv[NITER/2])/TST_SZ);
+  std::nth_element(&dtvl[0], &dtvl[NITER/2], &dtvl[NITER]);
+  printf("%.2f/%.2f clocks. Half-naive base 10.\n", double(dtv[NITER/2])/TST_SZ, double(dtvl[NITER/2])/TST_SZ);
 
   for (int it = 0; it < NITER; ++it) {
     memset(pout, '*', TST_SZ*21);
@@ -134,9 +182,24 @@ int main(int argz, char** argv)
         return 1;
       }
     }
+    char latbuf[32]={0};
+    uint64_t xx = 0;
+    uint64_t t2 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_hnts_base10(inpv[i] ^ xx, latbuf);
+      uint64_t x0, x1;
+      memcpy(&x0, &latbuf[0],  sizeof(uint64_t));
+      memcpy(&x1, &latbuf[16], sizeof(uint64_t));
+      xx = x0 & x1 & aZero;
+    }
+    uint64_t t3 = __rdtsc();
+    dtvl[it] = t3 - t2;
+    for (int i = 0; i < 21; ++i)
+      dummy += latbuf[i];
   }
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
-  printf("%.2f clocks. Half-naive base 10. Compiler fed by tea spoon.\n", double(dtv[NITER/2])/TST_SZ);
+  std::nth_element(&dtvl[0], &dtvl[NITER/2], &dtvl[NITER]);
+  printf("%.2f/%.2f clocks. Half-naive base 10. Compiler fed by tea spoon.\n", double(dtv[NITER/2])/TST_SZ, double(dtvl[NITER/2])/TST_SZ);
 
   for (int it = 0; it < NITER; ++it) {
     memset(pout, '*', TST_SZ*21);
@@ -154,9 +217,24 @@ int main(int argz, char** argv)
         return 1;
       }
     }
+    char latbuf[32]={0};
+    uint64_t xx = 0;
+    uint64_t t2 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_hn_base100(inpv[i] ^ xx, latbuf);
+      uint64_t x0, x1;
+      memcpy(&x0, &latbuf[0],  sizeof(uint64_t));
+      memcpy(&x1, &latbuf[16], sizeof(uint64_t));
+      xx = x0 & x1 & aZero;
+    }
+    uint64_t t3 = __rdtsc();
+    dtvl[it] = t3 - t2;
+    for (int i = 0; i < 21; ++i)
+      dummy += latbuf[i];
   }
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
-  printf("%.2f clocks. Half-naive base 100.\n", double(dtv[NITER/2])/TST_SZ);
+  std::nth_element(&dtvl[0], &dtvl[NITER/2], &dtvl[NITER]);
+  printf("%.2f/%.2f clocks. Half-naive base 100.\n", double(dtv[NITER/2])/TST_SZ, double(dtvl[NITER/2])/TST_SZ);
 
   for (int it = 0; it < NITER; ++it) {
     memset(pout, '*', TST_SZ*21);
@@ -174,9 +252,24 @@ int main(int argz, char** argv)
         return 1;
       }
     }
+    char latbuf[32]={0};
+    uint64_t xx = 0;
+    uint64_t t2 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_hnts_base100(inpv[i] ^ xx, latbuf);
+      uint64_t x0, x1;
+      memcpy(&x0, &latbuf[0],  sizeof(uint64_t));
+      memcpy(&x1, &latbuf[16], sizeof(uint64_t));
+      xx = x0 & x1 & aZero;
+    }
+    uint64_t t3 = __rdtsc();
+    dtvl[it] = t3 - t2;
+    for (int i = 0; i < 21; ++i)
+      dummy += latbuf[i];
   }
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
-  printf("%.2f clocks. Half-naive base 100. Compiler fed by tea spoon.\n", double(dtv[NITER/2])/TST_SZ);
+  std::nth_element(&dtvl[0], &dtvl[NITER/2], &dtvl[NITER]);
+  printf("%.2f/%.2f clocks. Half-naive base 100. Compiler fed by tea spoon.\n", double(dtv[NITER/2])/TST_SZ, double(dtvl[NITER/2])/TST_SZ);
 
   uint64_to_ascii_hn_base1000_init();
   for (int it = 0; it < NITER; ++it) {
@@ -195,9 +288,24 @@ int main(int argz, char** argv)
         return 1;
       }
     }
+    char latbuf[32]={0};
+    uint64_t xx = 0;
+    uint64_t t2 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_hn_base1000(inpv[i] ^ xx, latbuf);
+      uint64_t x0, x1;
+      memcpy(&x0, &latbuf[0],  sizeof(uint64_t));
+      memcpy(&x1, &latbuf[16], sizeof(uint64_t));
+      xx = x0 & x1 & aZero;
+    }
+    uint64_t t3 = __rdtsc();
+    dtvl[it] = t3 - t2;
+    for (int i = 0; i < 21; ++i)
+      dummy += latbuf[i];
   }
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
-  printf("%.2f clocks. Half-naive base 1000.\n", double(dtv[NITER/2])/TST_SZ);
+  std::nth_element(&dtvl[0], &dtvl[NITER/2], &dtvl[NITER]);
+  printf("%.2f/%.2f clocks. Half-naive base 1000.\n", double(dtv[NITER/2])/TST_SZ, double(dtvl[NITER/2])/TST_SZ);
 
   for (int it = 0; it < NITER; ++it) {
     memset(pout, '*', TST_SZ*21);
@@ -215,9 +323,24 @@ int main(int argz, char** argv)
         return 1;
       }
     }
+    char latbuf[32]={0};
+    uint64_t xx = 0;
+    uint64_t t2 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_tn_base100(inpv[i] ^ xx, latbuf);
+      uint64_t x0, x1;
+      memcpy(&x0, &latbuf[0],  sizeof(uint64_t));
+      memcpy(&x1, &latbuf[16], sizeof(uint64_t));
+      xx = x0 & x1 & aZero;
+    }
+    uint64_t t3 = __rdtsc();
+    dtvl[it] = t3 - t2;
+    for (int i = 0; i < 21; ++i)
+      dummy += latbuf[i];
   }
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
-  printf("%.2f clocks. Third-naive base 100.\n", double(dtv[NITER/2])/TST_SZ);
+  std::nth_element(&dtvl[0], &dtvl[NITER/2], &dtvl[NITER]);
+  printf("%.2f/%.2f clocks. Third-naive base 100.\n", double(dtv[NITER/2])/TST_SZ, double(dtvl[NITER/2])/TST_SZ);
 
   for (int it = 0; it < NITER; ++it) {
     memset(pout, '*', TST_SZ*21);
@@ -235,9 +358,24 @@ int main(int argz, char** argv)
         return 1;
       }
     }
+    char latbuf[32]={0};
+    uint64_t xx = 0;
+    uint64_t t2 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_tnts_base100(inpv[i] ^ xx, latbuf);
+      uint64_t x0, x1;
+      memcpy(&x0, &latbuf[0],  sizeof(uint64_t));
+      memcpy(&x1, &latbuf[16], sizeof(uint64_t));
+      xx = x0 & x1 & aZero;
+    }
+    uint64_t t3 = __rdtsc();
+    dtvl[it] = t3 - t2;
+    for (int i = 0; i < 21; ++i)
+      dummy += latbuf[i];
   }
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
-  printf("%.2f clocks. Third-naive base 100. Compiler fed by tea spoon.\n", double(dtv[NITER/2])/TST_SZ);
+  std::nth_element(&dtvl[0], &dtvl[NITER/2], &dtvl[NITER]);
+  printf("%.2f/%.2f clocks. Third-naive base 100. Compiler fed by tea spoon.\n", double(dtv[NITER/2])/TST_SZ, double(dtvl[NITER/2])/TST_SZ);
 
   for (int it = 0; it < NITER; ++it) {
     memset(pout, '*', TST_SZ*21);
@@ -256,9 +394,25 @@ int main(int argz, char** argv)
         return 1;
       }
     }
+    char latbuf[32]={0};
+    uint64_t xx = 0;
+    uint64_t t2 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      print_buf64(latbuf, inpv[i] ^ xx);
+      latbuf[20] = 0;
+      uint64_t x0, x1;
+      memcpy(&x0, &latbuf[0],  sizeof(uint64_t));
+      memcpy(&x1, &latbuf[16], sizeof(uint64_t));
+      xx = x0 & x1 & aZero;
+    }
+    uint64_t t3 = __rdtsc();
+    dtvl[it] = t3 - t2;
+    for (int i = 0; i < 21; ++i)
+      dummy += latbuf[i];
   }
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
-  printf("%.2f clocks. Joshua's base 100.\n", double(dtv[NITER/2])/TST_SZ);
+  std::nth_element(&dtvl[0], &dtvl[NITER/2], &dtvl[NITER]);
+  printf("%.2f/%.2f clocks. Joshua's base 100.\n", double(dtv[NITER/2])/TST_SZ, double(dtvl[NITER/2])/TST_SZ);
 
   for (int it = 0; it < NITER; ++it) {
     memset(pout, '*', TST_SZ*21);
@@ -276,9 +430,24 @@ int main(int argz, char** argv)
         return print_error(pout, pref, TST_SZ);
       }
     }
+    char latbuf[32]={0};
+    uint64_t xx = 0;
+    uint64_t t2 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_ta_base100(inpv[i] ^ xx, latbuf);
+      uint64_t x0, x1;
+      memcpy(&x0, &latbuf[0],  sizeof(uint64_t));
+      memcpy(&x1, &latbuf[16], sizeof(uint64_t));
+      xx = x0 & x1 & aZero;
+    }
+    uint64_t t3 = __rdtsc();
+    dtvl[it] = t3 - t2;
+    for (int i = 0; i < 21; ++i)
+      dummy += latbuf[i];
   }
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
-  printf("%.2f clocks. Terje-alike (2 chains) base 100.\n", double(dtv[NITER/2])/TST_SZ);
+  std::nth_element(&dtvl[0], &dtvl[NITER/2], &dtvl[NITER]);
+  printf("%.2f/%.2f clocks. Terje-alike (2 chains) base 100.\n", double(dtv[NITER/2])/TST_SZ, double(dtvl[NITER/2])/TST_SZ);
 
   for (int it = 0; it < NITER; ++it) {
     memset(pout, '*', TST_SZ*21);
@@ -296,9 +465,24 @@ int main(int argz, char** argv)
         return print_error(pout, pref, TST_SZ);
       }
     }
+    char latbuf[32]={0};
+    uint64_t xx = 0;
+    uint64_t t2 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_ta_base100_icc(inpv[i] ^ xx, latbuf);
+      uint64_t x0, x1;
+      memcpy(&x0, &latbuf[0],  sizeof(uint64_t));
+      memcpy(&x1, &latbuf[16], sizeof(uint64_t));
+      xx = x0 & x1 & aZero;
+    }
+    uint64_t t3 = __rdtsc();
+    dtvl[it] = t3 - t2;
+    for (int i = 0; i < 21; ++i)
+      dummy += latbuf[i];
   }
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
-  printf("%.2f clocks. Terje-alike (2 chains) base 100. Inline asm imitates ICC\n", double(dtv[NITER/2])/TST_SZ);
+  std::nth_element(&dtvl[0], &dtvl[NITER/2], &dtvl[NITER]);
+  printf("%.2f/%.2f clocks. Terje-alike (2 chains) base 100. Inline asm imitates ICC.\n", double(dtv[NITER/2])/TST_SZ, double(dtvl[NITER/2])/TST_SZ);
 
   for (int it = 0; it < NITER; ++it) {
     memset(pout, '*', TST_SZ*21);
@@ -316,9 +500,24 @@ int main(int argz, char** argv)
         return print_error(pout, pref, TST_SZ);
       }
     }
+    char latbuf[32]={0};
+    uint64_t xx = 0;
+    uint64_t t2 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_ta7_32_base100(inpv[i] ^ xx, latbuf);
+      uint64_t x0, x1;
+      memcpy(&x0, &latbuf[0],  sizeof(uint64_t));
+      memcpy(&x1, &latbuf[16], sizeof(uint64_t));
+      xx = x0 & x1 & aZero;
+    }
+    uint64_t t3 = __rdtsc();
+    dtvl[it] = t3 - t2;
+    for (int i = 0; i < 21; ++i)
+      dummy += latbuf[i];
   }
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
-  printf("%.2f clocks. Terje-alike (2 chains) base 100. Fix point format 7.32 for a benefit of stupid compilers.\n", double(dtv[NITER/2])/TST_SZ);
+  std::nth_element(&dtvl[0], &dtvl[NITER/2], &dtvl[NITER]);
+  printf("%.2f/%.2f clocks. Terje-alike (2 chains) base 100. Fix point format 7.32 for a benefit of stupid compilers.\n", double(dtv[NITER/2])/TST_SZ, double(dtvl[NITER/2])/TST_SZ);
 
   for (int it = 0; it < NITER; ++it) {
     memset(pout, '*', TST_SZ*21);
@@ -336,9 +535,24 @@ int main(int argz, char** argv)
         return print_error(pout, pref, TST_SZ);
       }
     }
+    char latbuf[32]={0};
+    uint64_t xx = 0;
+    uint64_t t2 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_ta3_base100(inpv[i] ^ xx, latbuf);
+      uint64_t x0, x1;
+      memcpy(&x0, &latbuf[0],  sizeof(uint64_t));
+      memcpy(&x1, &latbuf[16], sizeof(uint64_t));
+      xx = x0 & x1 & aZero;
+    }
+    uint64_t t3 = __rdtsc();
+    dtvl[it] = t3 - t2;
+    for (int i = 0; i < 21; ++i)
+      dummy += latbuf[i];
   }
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
-  printf("%.2f clocks. Terje-alike (3 chains) base 100.\n", double(dtv[NITER/2])/TST_SZ);
+  std::nth_element(&dtvl[0], &dtvl[NITER/2], &dtvl[NITER]);
+  printf("%.2f/%.2f clocks. Terje-alike (3 chains) base 100.\n", double(dtv[NITER/2])/TST_SZ, double(dtvl[NITER/2])/TST_SZ);
 
   if (dummy==42)
     printf("Blue moon\n");

@@ -9,6 +9,9 @@ all: bin2ascii_tb.exe
 bin2ascii_tb.o: bin2ascii_tb.cpp
 	${CPP} -c $<
 
+zero.o: zero.c
+	${CC} -c $<
+
 bin2ascii_t.o: bin2ascii_t.c
 	${CC} -c $<
 
@@ -53,6 +56,7 @@ bin2ascii_terjealike_base100_icc.o : bin2ascii_terjealike_base100_icc.c
 
 OBJECTS :=
 OBJECTS += bin2ascii_tb.o
+OBJECTS += zero.o
 OBJECTS += bin2ascii_t.o
 OBJECTS += bin2ascii_t_o3.o
 OBJECTS += bin2ascii_j.o
