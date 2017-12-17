@@ -21,6 +21,9 @@ bin2ascii_j.o: bin2ascii_j.c
 bin2ascii_t_o3.o: bin2ascii_t.c
 	${CCO3} -c -Doptimization_o3 $< -o $@
 
+bin2ascii_1mul.o: bin2ascii_1mul.c
+	${CC} -c $<
+
 bin2ascii_halfnaive_base10.o: bin2ascii_halfnaive_base10.c
 	${CC} -c $<
 
@@ -60,6 +63,7 @@ OBJECTS += zero.o
 OBJECTS += bin2ascii_t.o
 OBJECTS += bin2ascii_t_o3.o
 OBJECTS += bin2ascii_j.o
+OBJECTS += bin2ascii_1mul.o
 OBJECTS += bin2ascii_halfnaive_base10.o
 OBJECTS += bin2ascii_halfnaive_base10_ts.o
 OBJECTS += bin2ascii_halfnaive_base100.o
