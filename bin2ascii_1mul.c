@@ -100,7 +100,7 @@ void uint64_to_ascii_1mul_base10(uint64_t val, char* dst)
   asm  (
     "add   %1, %0\n"
     "cmovc %0, %1\n"
-    "sbb   %2, %2\n"
+    "adc   %2, %2\n"
      : "+r"(val_a), "+r"(val), "+r"(res) : : "cc"
   );
 
@@ -114,86 +114,81 @@ void uint64_to_ascii_1mul_base10(uint64_t val, char* dst)
     : "=a"(valx_l), "+d"(valx) : "r"(val)
   );
 
-  uint64_t mask61 = ((uint64_t)1 << 61) - 1;
-  uint64_t mask_h =  (uint64_t)15 << 60;
-  uint64_t valx2;
+  uint64_t mask = ((uint64_t)1 << 60) - 1;
+  uint64_t tmp;
 
-  #define uint64_to_ascii_1mul_base10_step(rshift) \
+  #define uint64_to_ascii_1mul_base10_step(rshift, lshift) \
   asm ( \
-    "lea  (%0,%0), %1     \n" \
-    "and  %3,  %1         \n" \
-    "and  %4,  %0         \n" \
-    "shr  $" rshift ", %2 \n" \
-    "add  %0,  %2         \n" \
-    "lea  (%1,%1,4), %0   \n" \
-    : "+&r"(valx), "=&r"(valx2), "+&r"(res) : "r"(mask61), "r"(mask_h) : "cc" \
+    "mov  %0,  %3        \n" \
+    "and  %2,  %0        \n" \
+    "lea  (%0,%0,4), %0  \n" \
+    "shr  $1,  %2        \n" \
+    "shr  $" rshift ", %3\n" \
+    "shl  $" lshift ", %3\n" \
+    "add  %3,  %1        \n" \
+    : "+r"(valx), "+r"(res), "+r"(mask), "=r"(tmp) :  : "cc" \
   )
 
-  uint64_to_ascii_1mul_base10_step("11"); // +digit[1]
-  uint64_to_ascii_1mul_base10_step("8");  // +digit[2]
-  uint64_to_ascii_1mul_base10_step("8");  // +digit[3]
-  uint64_to_ascii_1mul_base10_step("8");  // +digit[4]
-  uint64_to_ascii_1mul_base10_step("8");  // +digit[5]
-  uint64_to_ascii_1mul_base10_step("8");  // +digit[6]
-  uint64_to_ascii_1mul_base10_step("8");  // +digit[7]
+  uint64_to_ascii_1mul_base10_step("60",  "8"); // +digit[1]
+  uint64_to_ascii_1mul_base10_step("59", "16"); // +digit[2]
+  uint64_to_ascii_1mul_base10_step("58", "24"); // +digit[3]
+  uint64_to_ascii_1mul_base10_step("57", "32"); // +digit[4]
+  uint64_to_ascii_1mul_base10_step("56", "40"); // +digit[5]
+  uint64_to_ascii_1mul_base10_step("55", "48"); // +digit[6]
+  uint64_to_ascii_1mul_base10_step("54", "56"); // +digit[7]
 
   uint64_t ascii0x8 = 0x3030303030303030ull;
   asm ( // store digit[0..7]
-    "shr  $4,  %0\n"
     "or   %2,  %0\n"
     "mov  %0,  %1\n"
     : "+&r"(res), "=m"(dst[0]): "r"(ascii0x8) : "cc"
   );
 
 
-  #define uint64_to_ascii_1mul_base10_ls_step() \
+  #define uint64_to_ascii_1mul_base10_ls_step(rshift) \
   asm ( \
-    "mov  %0,  %1      \n" \
-    "add  %0,  %0      \n" \
-    "and  %2,  %0      \n" \
-    "lea  (%0,%0,4), %0\n" \
-    "and  %3,  %1      \n" \
-    : "+&r"(valx), "=&r"(res) : "r"(mask61), "r"(mask_h) : "cc" \
+    "mov  %0,  %1        \n" \
+    "and  %2,  %0        \n" \
+    "lea  (%0,%0,4), %0  \n" \
+    "shr  $1,  %2        \n" \
+    "shr  $" rshift ", %1\n" \
+    : "+r"(valx), "=r"(res), "+r"(mask) : : "cc" \
   )
 
-  uint64_to_ascii_1mul_base10_ls_step();  // +digit[8]
-  uint64_to_ascii_1mul_base10_step("8");  // +digit[9]
-  uint64_to_ascii_1mul_base10_step("8");  // +digit[10]
-  uint64_to_ascii_1mul_base10_step("8");  // +digit[11]
-  uint64_to_ascii_1mul_base10_step("8");  // +digit[12]
-  uint64_to_ascii_1mul_base10_step("8");  // +digit[13]
-  uint64_to_ascii_1mul_base10_step("8");  // +digit[14]
-  uint64_to_ascii_1mul_base10_step("8");  // +digit[15]
+  uint64_to_ascii_1mul_base10_ls_step("53"      ); // +digit[8]
+  uint64_to_ascii_1mul_base10_step   ("52",  "8"); // +digit[9]
+  uint64_to_ascii_1mul_base10_step   ("51", "16"); // +digit[10]
+  uint64_to_ascii_1mul_base10_step   ("50", "24"); // +digit[11]
+  uint64_to_ascii_1mul_base10_step   ("49", "32"); // +digit[12]
+  uint64_to_ascii_1mul_base10_step   ("48", "40"); // +digit[13]
+  uint64_to_ascii_1mul_base10_step   ("47", "48"); // +digit[14]
+  uint64_to_ascii_1mul_base10_step   ("46", "56"); // +digit[15]
 
   asm ( // store digit[8..15]
-    "shr  $4,  %0\n"
     "or   %2,  %0\n"
     "mov  %0,  %1\n"
     : "+&r"(res), "=m"(dst[8]): "r"(ascii0x8) : "cc"
   );
 
-  uint64_to_ascii_1mul_base10_ls_step();  // +digit[16]
-  uint64_to_ascii_1mul_base10_step("8");  // +digit[17]
-  uint64_to_ascii_1mul_base10_step("8");  // +digit[18]
+  uint64_to_ascii_1mul_base10_ls_step("45"      ); // +digit[16]
+  uint64_to_ascii_1mul_base10_step   ("44",  "8"); // +digit[17]
+  uint64_to_ascii_1mul_base10_step   ("43", "16"); // +digit[18]
   asm ( // +digit[19]
-    "and  %2,  %0      \n"
-    "shr  $8,  %1      \n"
-    "add  %0,  %1      \n"
-    : "+r"(valx), "+r"(res) : "r"(mask_h) : "cc"
+    "shr  $42, %0      \n"
+    "and  $-2, %k0     \n"
+    "and  $1,  %k1     \n"
+    "add  %k1, %k0     \n"
+    "shl  $24, %k0     \n"
+    "add  %k0, %k2     \n"
+    : "+r"(valx), "+r"(val), "+r"(res) :  : "cc"
   );
 
   asm ( // store digit[16..20]
-    "shr  $36, %0         \n"
-    "and  $0xfeffffff, %k0\n"
-    "or   %k4, %k0        \n"
-    "and  $1,  %k1        \n"
-    "shl  $24, %k1        \n"
-    "add  %k1, %k0        \n"
-    "mov  %k0, %2         \n"
-    "movb $0,  %3         \n"
-    : "+r"(res), "+r"(val), "=m"(dst[16]), "=m"(dst[20]): "r"(ascii0x8) : "cc"
+    "add  %k3, %k0        \n"
+    "mov  %k0, %1         \n"
+    "movb $0,  %2         \n"
+    : "+r"(res), "=m"(dst[16]), "=m"(dst[20]): "r"(ascii0x8) : "cc"
   );
-
 
 #endif
 }
