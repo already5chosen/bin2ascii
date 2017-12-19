@@ -25,6 +25,7 @@ void uint64_to_ascii_ta_base100_icc(uint64_t val, char* dst);
 void uint64_to_ascii_ta7_32_base100(uint64_t val, char* dst);
 void uint64_to_ascii_ta3_base100(uint64_t val, char* dst);
 void uint64_to_ascii_1mul_base10(uint64_t val, char* dst);
+void uint64_to_ascii_1chain_base100(uint64_t val, char* dst);
 }
 
 static int print_error(const char* res, const char* ref, int tstSz);
@@ -589,6 +590,41 @@ int main(int argz, char** argv)
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
   std::nth_element(&dtvl[0], &dtvl[NITER/2], &dtvl[NITER]);
   printf("%.2f/%.2f clocks. Terje-alike 1 multiplication base 10.\n", double(dtv[NITER/2])/TST_SZ, double(dtvl[NITER/2])/TST_SZ);
+
+  for (int it = 0; it < NITER; ++it) {
+    memset(pout, '*', TST_SZ*21);
+    uint64_t t0 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_1chain_base100(inpv[i], &outv[i*21]);
+    }
+    uint64_t t1 = __rdtsc();
+    dtv[it] = t1 - t0;
+    for (int i = 0; i < TST_SZ*21; ++i)
+      dummy += outv[i];
+    if (it==0) {
+      if (memcmp(pout, pref, TST_SZ*21) != 0) {
+        printf("uint64_to_ascii_1chain_base100 fail.\n");
+        return print_error(pout, pref, TST_SZ);
+      }
+    }
+    char latbuf[32]={0};
+    uint64_t xx = 0;
+    uint64_t t2 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      uint64_to_ascii_1chain_base100(inpv[i] ^ xx, latbuf);
+      uint64_t x0, x1;
+      memcpy(&x0, &latbuf[0],  sizeof(uint64_t));
+      memcpy(&x1, &latbuf[16], sizeof(uint64_t));
+      xx = x0 & x1 & aZero;
+    }
+    uint64_t t3 = __rdtsc();
+    dtvl[it] = t3 - t2;
+    for (int i = 0; i < 21; ++i)
+      dummy += latbuf[i];
+  }
+  std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
+  std::nth_element(&dtvl[0], &dtvl[NITER/2], &dtvl[NITER]);
+  printf("%.2f/%.2f clocks. Terje-alike 1 chain base 100.\n", double(dtv[NITER/2])/TST_SZ, double(dtvl[NITER/2])/TST_SZ);
 
   if (dummy==42)
     printf("Blue moon\n");
