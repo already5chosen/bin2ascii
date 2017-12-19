@@ -17,7 +17,7 @@ void uint64_to_ascii_1mul_base10(uint64_t val, char* dst)
 
   uint64_t val_e = val & (-2); // even part of val
   uint64_t valx = ((unsigned __int128)DIV_POW10_18 * val_e) >> 63;
-  valx += 1;  // valx >= (val_e/10^19)*2^60
+  valx += 1;  // valx >= (val_e/10^18)*2^60
   uint64_t mask = MASK_60;
   for (int i = 1; i < 19; ++i) {
     dst[i] = (valx >> (61-i)) + '0';
