@@ -117,35 +117,23 @@ void uint64_to_ascii_1chain_base100(uint64_t val, char* dst)
 {
   const uint64_t POW10_9  = 1000*1000*1000;
   const uint64_t POW10_18 = POW10_9 * POW10_9;
-  const uint64_t POW10_19 = POW10_18 * 10;
   const uint64_t DIV_POW10_18 = ((unsigned __int128)1 << 123)/POW10_18 + 1;
+  const uint64_t MASK_59 = ((uint64_t)1 << 59) - 1;
 
-  const uint64_t MASK_60 = ((uint64_t)1 << 60) - 1;
-
-  int msb = (val >= POW10_19);
-  uint64_t msbAdj = msb ? POW10_19 : 0;
-  val -= msbAdj;
-  dst[0] = msb + '0';
-
-  uint64_t val_e = val & (-2); // even part of val
-  uint64_t valx = ((unsigned __int128)DIV_POW10_18 * val_e) >> 63;
-  valx += 1;  // valx >= (val_e/10^18)*2^60
-
-  // do couple of iterations with base10 to bring valx under 2^59
-  uint64_t mask = MASK_60;
-  dst[1] = (valx >> (61-1)) + '0';
-  valx   = (valx & mask) * 5;
-  mask >>= 1;
-
-  dst[2] = (valx >> (61-2)) + '0';
-
-  for (int i = 3; i < 19; i += 2) {
+  uint64_t val_e = val & (-4); // val with 2 LS bits cleared
+  uint64_t valx = ((unsigned __int128)DIV_POW10_18 * val_e) >> 64;
+  memcpy(&dst[0], &b100_tab[(valx >> 59)*2], 2);
+  valx += 1;                   // valx >= (val_e/10^18)*2^59
+  uint64_t mask = MASK_59;
+  for (int i = 2; i < 18; i += 2) {
     valx   = (valx & mask) * 25;
     mask >>= 2;
-    memcpy(&dst[i], &b100_tab[(valx >> (60-i))*2], 2);
+    memcpy(&dst[i], &b100_tab[(valx >> (59-i))*2], 2);
   }
-  uint32_t dig19 = (((valx & mask) * 5) >> (61-19));
-  dig19 = (dig19 & (-2)) | (val & 1);
-  dst[19] = dig19 + '0';
+  // last pair of digits - restore 2 LS bits
+  valx = (valx & mask) * 25;
+  uint32_t dig18_19 = valx >> (59-18);
+  dig18_19 = (dig18_19 & (-4)) | (val & 3);
+  memcpy(&dst[18], &b100_tab[dig18_19*2], 2);
   dst[20] = 0;
 }
