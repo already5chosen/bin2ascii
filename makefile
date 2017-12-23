@@ -18,6 +18,9 @@ bin2ascii_t.o: bin2ascii_t.c
 bin2ascii_j.o: bin2ascii_j.c
 	${CC} -c $<
 
+bin2ascii_jm.o: bin2ascii_jm.c
+	${CC} -c $<
+
 bin2ascii_t_o3.o: bin2ascii_t.c
 	${CCO3} -c -Doptimization_o3 $< -o $@
 
@@ -69,6 +72,7 @@ OBJECTS += zero.o
 OBJECTS += bin2ascii_t.o
 OBJECTS += bin2ascii_t_o3.o
 OBJECTS += bin2ascii_j.o
+OBJECTS += bin2ascii_jm.o
 OBJECTS += bin2ascii_1mul.o
 OBJECTS += bin2ascii_1chain_base100.o
 OBJECTS += bin2ascii_2chains_base100.o

@@ -115,7 +115,7 @@ static const char b100_tab[200] = {
 
 void uint64_to_ascii_2chains_base100(uint64_t val, char* dst)
 {
-  
+
   const uint64_t POW10_9  = 1000*1000*1000;
   const uint64_t POW10_10 = POW10_9 * 10;
   const uint64_t POW10_18 = POW10_9 * POW10_9;
@@ -148,22 +148,29 @@ void uint64_to_ascii_2chains_base100(uint64_t val, char* dst)
     memcpy(&dst[i+10], &b100_tab[(valx_l >> (32-i))*2], 2);
   }
   #else
-  // gcc -O2 does not unroll an above version, but unrolls this one very well
-  for (int i = 2; i < 10; i += 4) {
-    valx_h   = (valx_h & mask_h) * 25;
-    valx_l   = (valx_l & mask_l) * 25;
-    mask_h >>= 2;
-    mask_l >>= 2;
-    memcpy(&dst[i+ 0], &b100_tab[(valx_h >> (59-i))*2], 2);
-    memcpy(&dst[i+10], &b100_tab[(valx_l >> (32-i))*2], 2);
-    
-    valx_h   = (valx_h & mask_h) * 25;
-    valx_l   = (valx_l & mask_l) * 25;
-    mask_h >>= 2;
-    mask_l >>= 2;
-    memcpy(&dst[i+ 2], &b100_tab[(valx_h >> (57-i))*2], 2);
-    memcpy(&dst[i+12], &b100_tab[(valx_l >> (30-i))*2], 2);
-  }
+  // gcc -O2 does not unroll an above version
+
+  valx_h   = (valx_h & mask_h) * 25;
+  valx_l   = (valx_l & mask_l) * 100;
+  mask_h >>= 2;
+  memcpy(&dst[ 2], &b100_tab[(valx_h >> 57)*2], 2);
+  memcpy(&dst[12], &b100_tab[(valx_l >> 32)*2], 2);
+
+  valx_h   = (valx_h & mask_h) * 100;
+  valx_l   = (valx_l & mask_l) * 100;
+  memcpy(&dst[ 4], &b100_tab[(valx_h >> 57)*2], 2);
+  memcpy(&dst[14], &b100_tab[(valx_l >> 32)*2], 2);
+
+  valx_h   = (valx_h & mask_h) * 100;
+  valx_l   = (valx_l & mask_l) * 100;
+  memcpy(&dst[ 6], &b100_tab[(valx_h >> 57)*2], 2);
+  memcpy(&dst[16], &b100_tab[(valx_l >> 32)*2], 2);
+
+  valx_h   = (valx_h & mask_h) * 25;
+  valx_l   = (valx_l & mask_l) * 25;
+  memcpy(&dst[ 8], &b100_tab[(valx_h >> 55)*2], 2);
+  memcpy(&dst[18], &b100_tab[(valx_l >> 30)*2], 2);
+
   #endif
 
   dst[20] = 0;

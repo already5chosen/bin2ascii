@@ -20,6 +20,7 @@ void uint64_to_ascii_tnts_base100(uint64_t val, char* dst);
 void uint64_to_ascii_hn_base1000(uint64_t val, char* dst);
 void uint64_to_ascii_hn_base1000_init(void);
 size_t __attribute__ ((noinline)) print_buf64(char *buffer, uint64_t value);
+void print_buf64_direct(char *buffer, uint64_t value);
 void uint64_to_ascii_ta_base100(uint64_t val, char* dst);
 void uint64_to_ascii_ta_base100_icc(uint64_t val, char* dst);
 void uint64_to_ascii_ta7_32_base100(uint64_t val, char* dst);
@@ -416,6 +417,41 @@ int main(int argz, char** argv)
   std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
   std::nth_element(&dtvl[0], &dtvl[NITER/2], &dtvl[NITER]);
   printf("%.2f/%.2f clocks. Joshua's base 100.\n", double(dtv[NITER/2])/TST_SZ, double(dtvl[NITER/2])/TST_SZ);
+
+  for (int it = 0; it < NITER; ++it) {
+    memset(pout, '*', TST_SZ*21);
+    uint64_t t0 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      print_buf64_direct(&outv[i*21], inpv[i]);
+    }
+    uint64_t t1 = __rdtsc();
+    dtv[it] = t1 - t0;
+    for (int i = 0; i < TST_SZ*21; ++i)
+      dummy += outv[i];
+    if (it==0) {
+      if (memcmp(pout, pref, TST_SZ*21) != 0) {
+        printf("print_buf64_direct fail.\n");
+        return 1;
+      }
+    }
+    char latbuf[32]={0};
+    uint64_t xx = 0;
+    uint64_t t2 = __rdtsc();
+    for (int i = 0; i < TST_SZ; ++i) {
+      print_buf64_direct(latbuf, inpv[i] ^ xx);
+      uint64_t x0, x1;
+      memcpy(&x0, &latbuf[0],  sizeof(uint64_t));
+      memcpy(&x1, &latbuf[16], sizeof(uint64_t));
+      xx = x0 & x1 & aZero;
+    }
+    uint64_t t3 = __rdtsc();
+    dtvl[it] = t3 - t2;
+    for (int i = 0; i < 21; ++i)
+      dummy += latbuf[i];
+  }
+  std::nth_element(&dtv[0], &dtv[NITER/2], &dtv[NITER]);
+  std::nth_element(&dtvl[0], &dtvl[NITER/2], &dtvl[NITER]);
+  printf("%.2f/%.2f clocks. Joshua's base 100. No intermediate buffers.\n", double(dtv[NITER/2])/TST_SZ, double(dtvl[NITER/2])/TST_SZ);
 
   for (int it = 0; it < NITER; ++it) {
     memset(pout, '*', TST_SZ*21);
